@@ -10,15 +10,15 @@
 
 1. Clone the repository or download the repo via the green Code button:
 
-`git clone https://github.com/dildeolupbiten/Zodiac-Ages.git`
+   `git clone https://github.com/dildeolupbiten/Zodiac-Ages.git`
 
 2. Change to the project directory:
 
-`cd Zodiac-Ages`
+   `cd Zodiac-Ages`
    
 3. Run the following command using the command prompt:
 
-`make main`
+   `make main`
 
 ## Usage
 
