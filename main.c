@@ -13,59 +13,38 @@ typedef struct date_t {
 } date_t;
 
 double julday(date_t date) {
-    double tjd_ut = swe_julday(
-        date.year, 
-        date.month, 
-        date.day, 
-        date.hour, 
-        SE_GREG_CAL
-    );
-    return tjd_ut + swe_deltat(tjd_ut);
+    return swe_julday(date.year, date.month, date.day, date.hour, SE_GREG_CAL);
 }
 
 double calc_ut(
-    int body, 
     double jd, 
     int *d, 
     int *h, 
     int *m, 
-    int *sign_index,
-    int zodiac
+    int *index
 ) {
-    double diff = zodiac != -1 ? swe_get_ayanamsa(jd) : 0;
     double x2[6];
     char serr[256];
     swe_calc_ut(
         jd,
-        body,
+        SE_SUN,
         SEFLG_SPEED,
         x2,
         serr
     );
-    double raw_degree = x2[0] - diff;
-    if (raw_degree < 0) {
-        raw_degree += 360;
+    double ra = x2[0] - swe_get_ayanamsa(jd);
+    if (ra < 0) {
+        ra += 360;
     }
-    *sign_index = ((int)raw_degree / 30) % 12;
-    double sign_degree = raw_degree - 30 * *sign_index;
-    *d = (int)sign_degree;
-    *h = (int)((sign_degree - *d) * 60);
-    *m = (int)((sign_degree - *d - *h / 60.0) * 3600);
-    return raw_degree;
+    *index = ((int)ra / 30) % 12;
+    double degree = ra - 30 * *index;
+    *d = (int)degree;
+    *h = (int)((degree - *d) * 60);
+    *m = (int)((degree - *d - *h / 60.0) * 3600);
+    return ra;
 }
 
-void find_dates_for_body_positions(
-    int body,
-    date_t start, 
-    date_t end,
-    int month,
-    int day,
-    int degree,
-    int hour,
-    int minute,
-    int zodiac,
-    int jd_step
-) {
+void find_zodiac_ages(date_t start, date_t end) {
     FILE *file = fopen("output.csv", "w");
     if (!file) {
         perror("Can't open file");
@@ -87,41 +66,29 @@ void find_dates_for_body_positions(
             &imin, 
             &isec
         );
-        if (imonth == month && iday == day) {
+        if (imonth == 3 && iday == 21) {
             int done = 0;
             for (double h = 0; h < 24.0; h += 1.0) {
                 for (double m = 0; m < 60.0; m += 1.0) {
                     double new_jd = jd_start + h / 24.0 + m / (24.0 * 60.0);
-                    int body_degree, body_hour, body_minute, sign_index;
+                    int degree, hour, minute, index;
                     calc_ut(
-                        body, 
                         new_jd, 
-                        &body_degree, 
-                        &body_hour, 
-                        &body_minute,
-                        &sign_index,
-                        zodiac
+                        &degree, 
+                        &hour, 
+                        &minute,
+                        &index
                     );
-                    if (
-                        body_degree == degree && 
-                        body_hour == hour && 
-                        body_minute == minute
-                    )
-                    {
+                    if (degree == 0 && hour == 0 && minute == 0) {
                         fprintf(
                             file,
-                            "%d/%s%d/%s%d,%s%d\u00b0%s%d'%s%d\",%s\n",
+                            "\"%d/03/21\",\"0\u00b0\",\"%s\"\n",
                             iyear,
-                            (imonth > 9 ? "" : "0"), imonth,
-                            (iday > 9 ? "" : "0"), iday,
-                            (body_degree > 9 ? "" : "0"), body_degree,
-                            (body_minute > 9 ? "" : "0"), body_minute,
-                            (body_hour > 9 ? "" : "0"), body_hour,
-                            SIGNS[sign_index]
+                            SIGNS[index]
                         );
                         fflush(file);
                         done = 1;
-                        jd_start += jd_step;
+                        jd_start += 360 * 1500;
                         break;
                     }
                 }
@@ -136,20 +103,10 @@ void find_dates_for_body_positions(
 }
 
 int main() {
-    int month = 3;
-    int day = 21;
-    int degree = 0;
-    int hour = 0;
-    int minute = 0;
-    int zodiac = 1;
-    int body = 0;
-    int jd_step = 360 * 1500;
     date_t start = {-13000, 1, 1, 0};
     date_t end = {14000, 1, 1, 0};
     swe_set_ephe_path("lib/swe/eph");
-    swe_set_sid_mode(1, 0, 0);
-    find_dates_for_body_positions(
-        body, start, end, month, day, degree, hour, minute, zodiac, jd_step
-    );
+    swe_set_sid_mode(SE_SIDM_FAGAN_BRADLEY, 0, 0);
+    find_zodiac_ages(start, end);
     return 0;
 }
