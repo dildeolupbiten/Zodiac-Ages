@@ -146,8 +146,12 @@ void find_zodiac_ages(
 }
 
 int main(int argc, const char *argv[]) {
-    int constellation = argc == 1 ? 0 : atoi(argv[1]);
-    int offset = argc == 1 ? 1500 : atoi(argv[2]);
+    int constellation, offset;
+    if (argc == 3) {
+        constellation = atoi(argv[1]), offset = atoi(argv[2]);
+    } else {
+        constellation = 0, offset = 1500;
+    }
     date_t start = {-13000, 1, 1, 0};
     date_t end = {14000, 1, 1, 0};
     swe_set_ephe_path("lib/swe/eph");
