@@ -26,8 +26,13 @@ Run the program using the following command:
 
 - For Linux and OSX
 
-    `./main`
+    `./main` (based on signs)
+
+    `./main 1 500` (based on constellation boundaries)
+   
 
 - For Windows
 
-    `.\main.exe`
+    `.\main.exe` (based on signs)
+
+    `.\main.exe 1 500` (based on constellation boundaries)
