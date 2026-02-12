@@ -131,7 +131,7 @@ void find_zodiac_ages(
                         );
                         fflush(file);
                         done = 1;
-                        jd_start += 360 * 1500;
+                        jd_start += 360 * offset;
                         break;
                     }
                 }
